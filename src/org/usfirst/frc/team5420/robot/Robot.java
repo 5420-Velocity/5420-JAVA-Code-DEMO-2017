@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.TalonSRX;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.command.Command;
@@ -30,42 +31,34 @@ public class Robot extends IterativeRobot {
 
 	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
-	protected Command autonomousCommand;
-	protected SendableChooser<Command> chooser = new SendableChooser<>();
 	protected Joystick joystick1, joystick2;
 	
 	protected Encoder encoderLeft;
 	protected Encoder encoderRight;
 	protected RobotDrive myDrive;
-	protected Talon motorFL, motorBL, motorBR, motorFR;
+	protected TalonSRX motorFL, motorBL, motorBR, motorFR;
 	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public void robotInit() {
 		oi = new OI();
-		chooser.addDefault("Default Auto", new ExampleCommand());
-		// chooser.addObject("My Auto", new MyAutoCommand());
-		SmartDashboard.putData("Auto mode", chooser);
 		
 		joystick1 = new Joystick(0);
-		joystick2 = new Joystick(1);
 		
 		encoderRight = new Encoder(6, 7);
 		encoderRight = new Encoder(9, 8);
 		
-		motorFL = new Talon(3);
-		motorBL = new Talon(4);
-		motorBR = new Talon(1);
-		motorFR = new Talon(2);
+		motorFL = new TalonSRX(3);
+		motorBL = new TalonSRX(4);
+		motorBR = new TalonSRX(1);
+		motorFR = new TalonSRX(2);
 		
 		myDrive = new RobotDrive(motorFL, motorBL, motorBR, motorFR);
 		
 		SmartDashboard.putBoolean("InitComplete", true);
-		SmartDashboard.putInt("COMVersion", 1);
 	}
 
 	/**
@@ -96,18 +89,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		autonomousCommand = chooser.getSelected();
-
-		/*
-		 * String autoSelected = SmartDashboard.getString("Auto Selector",
-		 * "Default"); switch(autoSelected) { case "My Auto": autonomousCommand
-		 * = new MyAutoCommand(); break; case "Default Auto": default:
-		 * autonomousCommand = new ExampleCommand(); break; }
-		 */
-
-		// schedule the autonomous command (example)
-		if (autonomousCommand != null)
-			autonomousCommand.start();
+		
 	}
 
 	/**
@@ -120,12 +102,6 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void teleopInit() {
-		
-		doDrive(joystick1.getY(Hand.kLeft), joystick1.getX(Hand.kLeft), joystick1.getX(Hand.kRight));
-		
-		if (autonomousCommand != null){
-			autonomousCommand.cancel();
-		}
 	}
 
 	/**
@@ -133,6 +109,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+		doMecDrive(joystick1.getRawAxis(1), joystick1.getRawAxis(0), joystick1.getRawAxis(4));
+		//doDrive(joystick1.getRawAxis(1), joystick1.getRawAxis(0));
 		Scheduler.getInstance().run();
 	}
 
@@ -143,8 +121,12 @@ public class Robot extends IterativeRobot {
 	public void testPeriodic() {
 		LiveWindow.run();
 	}
+
+	public void doDrive(double frValue, double lrValue){
+		myDrive.arcadeDrive(frValue, lrValue);
+	}
 	
-	public void doDrive(double frValue, double lrValue, double rValue){
+	public void doMecDrive(double frValue, double lrValue, double rValue){
 		myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
 	}
 }
