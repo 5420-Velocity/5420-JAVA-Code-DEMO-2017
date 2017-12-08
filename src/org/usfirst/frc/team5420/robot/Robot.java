@@ -2,10 +2,12 @@
 package org.usfirst.frc.team5420.robot;
 
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Victor;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.command.Command;
@@ -32,8 +34,10 @@ public class Robot extends IterativeRobot {
 	protected SendableChooser<Command> chooser = new SendableChooser<>();
 	protected Joystick joystick1, joystick2;
 	
+	protected Encoder encoderLeft;
+	protected Encoder encoderRight;
 	protected RobotDrive myDrive;
-	protected VictorSP motorFL, motorBL, motorBR, motorFR;
+	protected Talon motorFL, motorBL, motorBR, motorFR;
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -50,10 +54,13 @@ public class Robot extends IterativeRobot {
 		joystick1 = new Joystick(0);
 		joystick2 = new Joystick(1);
 		
-		motorFL = new VictorSP(3);
-		motorBL = new VictorSP(4);
-		motorBR = new VictorSP(1);
-		motorFR = new VictorSP(2);
+		encoderRight = new Encoder(6, 7);
+		encoderRight = new Encoder(9, 8);
+		
+		motorFL = new Talon(3);
+		motorBL = new Talon(4);
+		motorBR = new Talon(1);
+		motorFR = new Talon(2);
 		
 		myDrive = new RobotDrive(motorFL, motorBL, motorBR, motorFR);
 		
