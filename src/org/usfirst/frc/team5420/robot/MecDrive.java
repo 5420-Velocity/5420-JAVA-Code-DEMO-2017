@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.SpeedController;
 
 public class MecDrive {
 	private boolean isSetup = false;
+	public double deadband = 0;
 	private SpeedController leftFront;
 	private SpeedController rightFront;
 	private SpeedController leftRear;
@@ -26,6 +27,7 @@ public class MecDrive {
 		this.isSetup = true;
 	}
 	
+	
 	public boolean is_setup(){
 		
 		return this.isSetup;
@@ -35,6 +37,9 @@ public class MecDrive {
 		
 	}
 	
+	public void zeroDeadband(){
+		this.deadband = 0;
+	}
 	public void drive( int Power, int Turn, int Crab ){
 		
 	}
