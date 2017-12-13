@@ -1,12 +1,14 @@
 
 package org.usfirst.frc.team5420.robot;
 
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.TalonSRX;
 import edu.wpi.first.wpilibj.Victor;
@@ -32,6 +34,7 @@ public class Robot extends IterativeRobot {
 	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
 	protected Joystick joystick1, joystick2;
+	protected ADXRS450_Gyro gyroSensor;
 	
 	protected Encoder encoderLeft;
 	protected Encoder encoderRight;
@@ -50,6 +53,9 @@ public class Robot extends IterativeRobot {
 		
 		encoderRight = new Encoder(6, 7);
 		encoderRight = new Encoder(9, 8);
+		
+		gyroSensor = new ADXRS450_Gyro( SPI.Port.kOnboardCS0 );
+		gyroSensor.calibrate();
 		
 		motorFL = new TalonSRX(3);
 		motorBL = new TalonSRX(4);
@@ -109,8 +115,10 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		doMecDrive(joystick1.getRawAxis(1), joystick1.getRawAxis(0), joystick1.getRawAxis(4));
+		
+		doMecDrive( (joystick1.getRawAxis(0)*-1), joystick1.getRawAxis(4), joystick1.getRawAxis(1));
 		//doDrive(joystick1.getRawAxis(1), joystick1.getRawAxis(0));
+		
 		Scheduler.getInstance().run();
 	}
 
@@ -128,5 +136,19 @@ public class Robot extends IterativeRobot {
 	
 	public void doMecDrive(double frValue, double lrValue, double rValue){
 		myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
+		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
+		//myDrive.mecanumDrive_Cartesian(x, y, rotation, gyroAngle);
+		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
+		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, gyroSensor.getAngle());
 	}
+	
+	public double deadband(double joystick) {
+	    if(joystick < 0.2 || (joystick)*-1 > 0.2) return 0;
+	    else return joystick;
+	}
+	public double deadband(double joystick, double dead) {
+	    if(joystick < dead || (joystick)*1 > dead) return 0;
+	    else return joystick;
+	}
+	
 }
