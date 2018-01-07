@@ -115,8 +115,13 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		
-		doMecDrive( (joystick1.getRawAxis(0)*-1), joystick1.getRawAxis(4), joystick1.getRawAxis(1));
+		doMecDrive( dead(joystick1.getRawAxis(1)), dead(joystick1.getRawAxis(0)), dead(joystick1.getRawAxis(4)) );
+		//                               ^                   ^                                ^
+ 		//                               |                   |                                |
+		//              Left / Right    /                    |                                |
+		//                                        Rotation  /                                 |
+		//                                                                  Forward Reverse  /
+		//
 		//doDrive(joystick1.getRawAxis(1), joystick1.getRawAxis(0));
 		
 		Scheduler.getInstance().run();
@@ -134,11 +139,24 @@ public class Robot extends IterativeRobot {
 		myDrive.arcadeDrive(frValue, lrValue);
 	}
 	
+	public double dead(double value) {
+	    if(Math.abs(value) < 0.2) return 0;
+	    else return value;
+	}
+	
 	public void doMecDrive(double frValue, double lrValue, double rValue){
-		myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
+		//myDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
+		//                               ^  ^  ^
+ 		//                               |  |  |
+		//              Left / Right    /   |  |
+		//                       Rotation  /   |
+		//                   Forward Reverse  /
+		//
+		myDrive.mecanumDrive_Cartesian(lrValue, rValue, frValue, 0);
+		
 		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
+		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, gyroSensor.getAngle());
 		//myDrive.mecanumDrive_Cartesian(x, y, rotation, gyroAngle);
-		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
 		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, gyroSensor.getAngle());
 	}
 	
