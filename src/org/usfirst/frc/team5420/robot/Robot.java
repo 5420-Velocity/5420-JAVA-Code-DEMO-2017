@@ -4,27 +4,19 @@ package org.usfirst.frc.team5420.robot;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.Talon;
 
 //import edu.wpi.first.wpilibj.TalonSRX;
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
-import com.ctre.phoenix.motorcontrol.can.*;
 
-import edu.wpi.first.wpilibj.Victor;
-import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
-import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import org.usfirst.frc.team5420.robot.commands.ExampleCommand;
 import org.usfirst.frc.team5420.robot.subsystems.ExampleSubsystem;
 
 /**
@@ -43,8 +35,9 @@ public class Robot extends IterativeRobot {
 	
 	protected Encoder encoderLeft;
 	protected Encoder encoderRight;
-	protected RobotDrive myDrive;
-	protected TalonSRX motorFL, motorBL, motorBR, motorFR;
+	protected MecDrive MyDrive;
+	protected Talon motorFL, motorBL, motorBR, motorFR;
+	public static CameraLines lines = null;
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -52,6 +45,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
+		System.out.println("Robot");
+		lines = new CameraLines(); // Start the Camera with Lines Server
 		oi = new OI();
 		
 		joystick1 = new Joystick(0);
@@ -59,17 +54,23 @@ public class Robot extends IterativeRobot {
 		encoderRight = new Encoder(6, 7);
 		encoderRight = new Encoder(9, 8);
 		
-		gyroSensor = new ADXRS450_Gyro( SPI.Port.kOnboardCS0 );
-		gyroSensor.calibrate();
+		motorFL = new Talon(3);
+		motorBL = new Talon(4);
+		motorBR = new Talon(1);
+		motorFR = new Talon(2);
 		
-		motorFL = new TalonSRX(3);
-		motorBL = new TalonSRX(4);
-		motorBR = new TalonSRX(1);
-		motorFR = new TalonSRX(2);
-		
-		myDrive = new RobotDrive(motorFL, motorBL, motorBR, motorFR);
+		MyDrive = new MecDrive(motorFL, motorBL, motorBR, motorFR);
+		MyDrive.gyroSensor = null;
+		MyDrive.invert(true);
+		MyDrive.setDeadband(0.2); // The Zone to Ignore
+		MyDrive.enableDeadband();
 		
 		SmartDashboard.putBoolean("InitComplete", true);
+	}
+	
+	@Override
+	public void robotPeriodic(){
+		
 	}
 
 	/**
@@ -84,6 +85,9 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void disabledPeriodic() {
+		MyDrive.stop();
+		joystick1.setRumble(GenericHID.RumbleType.kLeftRumble, 0 );
+		joystick1.setRumble(GenericHID.RumbleType.kRightRumble, 0 );
 		Scheduler.getInstance().run();
 	}
 
@@ -113,6 +117,7 @@ public class Robot extends IterativeRobot {
 
 	@Override
 	public void teleopInit() {
+		
 	}
 
 	/**
@@ -120,14 +125,11 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		doMecDrive( dead(joystick1.getRawAxis(1)), dead(joystick1.getRawAxis(0)), dead(joystick1.getRawAxis(4)) );
-		//                               ^                   ^                                ^
- 		//                               |                   |                                |
-		//              Left / Right    /                    |                                |
-		//                                        Rotation  /                                 |
-		//                                                                  Forward Reverse  /
-		//
-		//doDrive(joystick1.getRawAxis(1), joystick1.getRawAxis(0));
+		//joystick1.getRawAxis(0)
+		doMecDrive( 0, (-joystick1.getRawAxis(1)), joystick1.getRawAxis(4) );
+		
+		joystick1.setRumble(GenericHID.RumbleType.kLeftRumble, 0);
+		joystick1.setRumble(GenericHID.RumbleType.kRightRumble, 0.4);
 		
 		Scheduler.getInstance().run();
 	}
@@ -137,11 +139,11 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
-		LiveWindow.run();
+		
 	}
 
 	public void doDrive(double frValue, double lrValue){
-		myDrive.arcadeDrive(frValue, lrValue);
+		MyDrive.drive(frValue, lrValue, 0);
 	}
 	
 	public double dead(double value) {
@@ -150,19 +152,7 @@ public class Robot extends IterativeRobot {
 	}
 	
 	public void doMecDrive(double frValue, double lrValue, double rValue){
-		//myDrive.mecanumDrive_Cartesian(0, 0, 0, 0);
-		//                               ^  ^  ^
- 		//                               |  |  |
-		//              Left / Right    /   |  |
-		//                       Rotation  /   |
-		//                   Forward Reverse  /
-		//
-		myDrive.mecanumDrive_Cartesian(lrValue, rValue, frValue, 0);
-		
-		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, 0);
-		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, gyroSensor.getAngle());
-		//myDrive.mecanumDrive_Cartesian(x, y, rotation, gyroAngle);
-		//myDrive.mecanumDrive_Cartesian(frValue, lrValue, rValue, gyroSensor.getAngle());
+		MyDrive.drive(frValue, rValue, lrValue);
 	}
 	
 	public double deadband(double joystick) {
